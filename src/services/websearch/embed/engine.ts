@@ -11,15 +11,6 @@ import { flattenTree, groupListItemsIntoChunks } from '../markdown';
 import type { WebSource } from '../search-sources';
 import type { MarkdownElement } from '../types';
 
-let processEmbeddings: (
-  texts: string[],
-  options: {
-    accessToken: string;
-  },
-) => Promise<number[][]> = async () => {
-  throw new Error('processEmbeddings function not initialized');
-};
-
 const {
   inference: {
     tasks: {
@@ -34,39 +25,43 @@ const {
   },
 } = appConfig;
 
-if (provider === undefined && endpointUrl === undefined) {
-  const extractor = await pipeline('feature-extraction', model);
+// Lazy-loaded extractor to avoid onnxruntime mutex issues during dev startup
+let extractorPromise: Promise<any> | null = null;
 
-  processEmbeddings = async (
-    texts: string[],
-    _options: {
-      accessToken: string;
-    },
-  ): Promise<number[][]> => {
+const getExtractor = async () => {
+  if (!extractorPromise) {
+    extractorPromise = pipeline('feature-extraction', model);
+  }
+  return extractorPromise;
+};
+
+const processEmbeddings = async (
+  texts: string[],
+  options: {
+    accessToken: string;
+  },
+): Promise<number[][]> => {
+  if (provider === undefined && endpointUrl === undefined) {
+    // Use local transformers pipeline (lazy-loaded)
+    const extractor = await getExtractor();
     const results = await extractor(texts, { pooling: 'cls' });
     return results.tolist();
-  };
-} else {
-  processEmbeddings = async (
-    texts: string[],
-    options: {
-      accessToken: string;
-    },
-  ): Promise<number[][]> => {
-    const results = await featureExtraction(
-      normalizeFeatureExtractionArgs({
-        inputs: texts,
-        accessToken: options.accessToken,
-        modelName: model,
-        modelProvider: provider!,
-        endpointUrl: endpointUrl,
-      }),
-      normalizeOptions(),
-    );
+  }
 
-    return results as number[][];
-  };
-}
+  // Use HuggingFace Inference API
+  const results = await featureExtraction(
+    normalizeFeatureExtractionArgs({
+      inputs: texts,
+      accessToken: options.accessToken,
+      modelName: model,
+      modelProvider: provider!,
+      endpointUrl: endpointUrl,
+    }),
+    normalizeOptions(),
+  );
+
+  return results as number[][];
+};
 
 export const configureEmbeddingsIndex = async () => {
   // Check if the database is empty

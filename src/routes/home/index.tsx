@@ -6,7 +6,7 @@ import {
   useTask$,
   useVisibleTask$,
 } from '@builder.io/qwik';
-import { server$, useNavigate } from '@builder.io/qwik-city';
+import { type DocumentHead, server$, useNavigate } from '@builder.io/qwik-city';
 import { cn } from '@qwik-ui/utils';
 import { LuArrowUp, LuEgg, LuGlobe } from '@qwikest/icons/lucide';
 import { Button, Textarea } from '~/components';
@@ -366,7 +366,7 @@ export default component$(() => {
               <div class="flex flex-col items-center justify-center mb-4">
                 <MainLogo class="mt-6 md:mt-0 w-[70px] h-[70px]" />
                 <h1 class="text-neutral-600 text-2xl font-semibold">
-                  AI Sheets
+                  Braincells
                 </h1>
               </div>
               <div class="bg-neutral-100 rounded-md flex justify-center items-center flex-wrap p-2 gap-2">
@@ -512,3 +512,14 @@ export default component$(() => {
     </ActiveDatasetProvider>
   );
 });
+
+export const head: DocumentHead = {
+  title: 'Braincells - Intelligent Spreadsheet Automation',
+  meta: [
+    {
+      name: 'description',
+      content:
+        'AI-powered data manipulation using local LLM inference. Developed by Kennesaw State University Office of Research.',
+    },
+  ],
+};
