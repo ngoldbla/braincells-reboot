@@ -12,7 +12,7 @@
   "trustedDependencies-annotation": "Needed for bun to allow running install scripts",
   "type": "module",
   "scripts": {
-    "postinstall": "if [ -z \"$SKIP_POSTINSTALL\" ] || [ \"$SKIP_POSTINSTALL\" = \"0\" ]; then npx playwright install; else echo 'Skipping playwright installation.'; fi",
+    "postinstall": "node -e \"if(process.env.CI !== 'true') require('child_process').execSync('npx playwright install', {stdio: 'inherit'})\"",
     "build": "qwik build",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
