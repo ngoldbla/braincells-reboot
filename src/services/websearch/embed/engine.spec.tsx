@@ -10,17 +10,23 @@ import {
   queryDatasetSources,
 } from './engine';
 
+const accessToken = process.env.HF_TOKEN;
+
+// Skip all tests if HF_TOKEN is not available (e.g., in CI without secrets)
+const describeIfToken = accessToken ? describe : describe.skip;
+
 afterAll(async () => {
-  await deleteIndex();
+  if (accessToken) {
+    await deleteIndex();
+  }
 });
 
-const accessToken = process.env.HF_TOKEN!;
-describe(
+describeIfToken(
   'search engine',
   () => {
     it('should embed some data', async () => {
       const embeddings = await embedder(['hello world', 'goodbye world'], {
-        accessToken,
+        accessToken: accessToken!,
       });
 
       expect(embeddings).toHaveLength(2);
@@ -41,7 +47,7 @@ describe(
           },
         ],
         options: {
-          accessToken,
+          accessToken: accessToken!,
         },
       });
 
@@ -75,7 +81,7 @@ describe(
           },
         ],
         options: {
-          accessToken,
+          accessToken: accessToken!,
         },
       });
 
@@ -118,14 +124,14 @@ describe(
         dataset,
         sources,
         options: {
-          accessToken,
+          accessToken: accessToken!,
         },
       });
 
       const results = await queryDatasetSources({
         dataset,
         query: 'greetings',
-        options: { accessToken },
+        options: { accessToken: accessToken! },
       });
 
       expect(results.length).toBeGreaterThan(0);
