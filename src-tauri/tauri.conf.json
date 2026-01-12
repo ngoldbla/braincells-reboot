@@ -60,9 +60,9 @@
       "open": true
     },
     "updater": {
-      "pubkey": "REPLACE_WITH_YOUR_PUBLIC_KEY",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEI0M0NGQ0M1RTE0Qzg0MzkKUldRNWhFemh4Znc4dE5sWWw0SlpiSDliREUvaHVIKzBUUGk2c3laYzNRQjFtU2dnZkpCR2Rkb28K",
       "endpoints": [
-        "https://github.com/kennesaw-state-university/braincells/releases/latest/download/latest.json"
+        "https://github.com/ngoldbla/braincells-reboot/releases/latest/download/latest.json"
       ],
       "windows": {
         "installMode": "passive"
