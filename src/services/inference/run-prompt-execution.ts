@@ -11,6 +11,7 @@ import { cacheGet, cacheSet } from '~/services/cache';
 import type { TaskType } from '~/state/columns';
 import { bigIntStringify } from '~/usecases/utils/serializer';
 import { type Example, materializePrompt } from './materialize-prompt';
+import { shouldUseTauriInference, runTauriInference } from './tauri-bridge';
 
 export interface PromptExecutionParams {
   modelName: string;
@@ -42,18 +43,50 @@ export const handleError = (e: unknown): string => {
   return JSON.stringify(e, bigIntStringify, 2);
 };
 
-export const runPromptExecution = async ({
-  accessToken,
-  modelName,
-  modelProvider,
-  instruction,
-  sourcesContext,
-  data,
-  examples,
-  timeout,
-  endpointUrl,
-  task,
-}: PromptExecutionParams): Promise<PromptExecutionResponse> => {
+export const runPromptExecution = async (
+  params: PromptExecutionParams,
+): Promise<PromptExecutionResponse> => {
+  const {
+    accessToken,
+    modelName,
+    modelProvider,
+    instruction,
+    sourcesContext,
+    data,
+    examples,
+    timeout,
+    endpointUrl,
+    task,
+  } = params;
+
+  // Check cache first (works for both Tauri and HuggingFace)
+  const cacheKey = {
+    modelName,
+    modelProvider,
+    endpointUrl,
+    instruction,
+    data,
+    examples,
+    withSources: sourcesContext && sourcesContext.length > 0,
+  };
+  const cacheValue = cacheGet(cacheKey);
+  if (cacheValue) {
+    return {
+      value: cacheValue,
+      done: true,
+    };
+  }
+
+  // Route to Tauri backend when available
+  if (shouldUseTauriInference()) {
+    const result = await runTauriInference(params);
+    if (result.value) {
+      cacheSet(cacheKey, result.value);
+    }
+    return result;
+  }
+
+  // Fall back to HuggingFace
   const inputPrompt = materializePrompt({
     instruction,
     sourcesContext,
@@ -73,23 +106,6 @@ export const runPromptExecution = async ({
   if (isDev) showPromptInfo(modelName, modelProvider, endpointUrl, inputPrompt);
 
   try {
-    const cacheKey = {
-      modelName,
-      modelProvider,
-      endpointUrl,
-      instruction,
-      data,
-      examples,
-      withSources: sourcesContext && sourcesContext.length > 0,
-    };
-    const cacheValue = cacheGet(cacheKey);
-    if (cacheValue) {
-      return {
-        value: cacheValue,
-        done: true,
-      };
-    }
-
     const response = await chatCompletion(args, options);
     const result = response.choices[0].message.content;
 
@@ -111,35 +127,21 @@ export const runPromptExecution = async ({
   }
 };
 
-export const runPromptExecutionStream = async function* ({
-  modelName,
-  modelProvider,
-  instruction,
-  sourcesContext,
-  data,
-  examples,
-  timeout,
-  accessToken,
-  endpointUrl,
-  task,
-}: PromptExecutionParams): AsyncGenerator<PromptExecutionResponse> {
-  const inputPrompt = materializePrompt({
+export const runPromptExecutionStream = async function* (
+  params: PromptExecutionParams,
+): AsyncGenerator<PromptExecutionResponse> {
+  const {
+    modelName,
+    modelProvider,
     instruction,
     sourcesContext,
     data,
     examples,
-    task,
-  });
-  const args = normalizeChatCompletionArgs({
-    messages: [{ role: 'user', content: inputPrompt }],
-    modelProvider,
-    modelName,
+    timeout,
     accessToken,
     endpointUrl,
-  });
-  const options = normalizeOptions(timeout);
-
-  if (isDev) showPromptInfo(modelName, modelProvider, endpointUrl, inputPrompt);
+    task,
+  } = params;
 
   const cacheKey = {
     modelName,
@@ -160,6 +162,35 @@ export const runPromptExecutionStream = async function* ({
     return;
   }
 
+  // Tauri backend doesn't support streaming yet, fall back to non-streaming
+  if (shouldUseTauriInference()) {
+    const result = await runTauriInference(params);
+    if (result.value) {
+      cacheSet(cacheKey, result.value);
+    }
+    yield result;
+    return;
+  }
+
+  // Use HuggingFace streaming
+  const inputPrompt = materializePrompt({
+    instruction,
+    sourcesContext,
+    data,
+    examples,
+    task,
+  });
+  const args = normalizeChatCompletionArgs({
+    messages: [{ role: 'user', content: inputPrompt }],
+    modelProvider,
+    modelName,
+    accessToken,
+    endpointUrl,
+  });
+  const options = normalizeOptions(timeout);
+
+  if (isDev) showPromptInfo(modelName, modelProvider, endpointUrl, inputPrompt);
+
   try {
     let accumulated = '';
     const stream = chatCompletionStream(args, options);
@@ -174,6 +205,8 @@ export const runPromptExecutionStream = async function* ({
     if (accumulated.toLocaleLowerCase().includes('no more items')) {
       throw new Error(accumulated);
     }
+
+    cacheSet(cacheKey, accumulated);
 
     yield {
       value: accumulated,
