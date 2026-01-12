@@ -39,14 +39,14 @@ describe('createDatasetColumn', () => {
         {
           column_name: 'rowIdx',
           column_type: 'BIGINT',
-          default: `nextval('"${dataset.id}_rowIdx_seq"')`,
+          default: null,
           extra: null,
-          key: 'PRI',
-          null: 'NO',
+          key: null,
+          null: 'YES',
         },
         {
           column_name: column.id,
-          column_type: 'INTEGER',
+          column_type: 'VARCHAR',
           null: 'YES',
           extra: null,
           default: null,

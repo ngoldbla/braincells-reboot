@@ -128,8 +128,9 @@ describe(
         options: { accessToken },
       });
 
+      expect(results.length).toBeGreaterThan(0);
       const mostSimilar = results[0];
-
+      expect(mostSimilar).toBeDefined();
       expect(mostSimilar.text).toBe('hello world\n\n');
     });
   },
