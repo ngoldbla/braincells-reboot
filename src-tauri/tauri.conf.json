@@ -60,8 +60,13 @@
       "open": true
     },
     "updater": {
-      "pubkey": "",
-      "endpoints": []
+      "pubkey": "REPLACE_WITH_YOUR_PUBLIC_KEY",
+      "endpoints": [
+        "https://github.com/kennesaw-state-university/braincells/releases/latest/download/latest.json"
+      ],
+      "windows": {
+        "installMode": "passive"
+      }
     }
   }
 }

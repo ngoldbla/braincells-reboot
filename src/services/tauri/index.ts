@@ -110,7 +110,7 @@ let tauriInvoke:
 let tauriListen:
   | ((
       event: string,
-      handler: (payload: unknown) => void,
+      handler: (event: { payload: unknown }) => void,
     ) => Promise<() => void>)
   | null = null;
 
