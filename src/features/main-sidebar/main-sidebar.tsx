@@ -1,7 +1,7 @@
 import { $, component$, useSignal, useTask$ } from '@builder.io/qwik';
 import { Link } from '@builder.io/qwik-city';
 import { cn } from '@qwik-ui/utils';
-import { LuPanelLeft } from '@qwikest/icons/lucide';
+import { LuPanelLeft, LuSettings } from '@qwikest/icons/lucide';
 import { isToday } from 'date-fns';
 import { useModals } from '~/components/hooks';
 import { useClickOutside } from '~/components/hooks/click/outside';
@@ -96,7 +96,9 @@ export const MainSidebar = component$(() => {
         <div
           class={cn('flex items-center justify-between px-2 mt-5 w-[274px]')}
         >
-          <span class="text-base font-semibold px-4 font-inter">AI Sheets</span>
+          <span class="text-base font-semibold px-4 font-inter">
+            Braincells
+          </span>
           <div class="md:hidden">
             <MainSidebarButton />
           </div>
@@ -113,12 +115,13 @@ export const MainSidebar = component$(() => {
             />
             Create a dataset
           </Link>
-          {/* <Tooltip text="Coming soon!">
-            <Link class="flex items-center select-none gap-3 py-2 hover:bg-gray-100 rounded text-sm font-light truncate max-w-full pl-3">
-              <LuLibrary class="w-6 h-6 text-muted-foreground" />
-              Prompt library
-            </Link>
-          </Tooltip> */}
+          <Link
+            href="/home/settings"
+            class="flex items-center gap-3 py-2 hover:bg-gray-100 rounded text-sm font-light truncate max-w-full pl-3"
+          >
+            <LuSettings class="w-6 h-6 text-muted-foreground" />
+            Settings
+          </Link>
         </div>
       </div>
 

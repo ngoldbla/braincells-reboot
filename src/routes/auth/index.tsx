@@ -14,7 +14,9 @@ export const onGet = async (event: RequestEvent) => {
 
   if (hfToken) return handleHFTokenLogin(event);
 
-  throw Error('Missing HF_TOKEN or OAUTH_CLIENT_ID');
+  // No HF credentials configured - redirect to settings page
+  // This is expected in desktop mode where users configure API keys locally
+  throw event.redirect(303, '/home/settings');
 };
 
 const handleOAuthLogin = async ({ url, cookie, redirect }: RequestEvent) => {

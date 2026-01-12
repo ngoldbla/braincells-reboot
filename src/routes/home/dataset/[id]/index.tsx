@@ -75,11 +75,11 @@ export default component$(() => {
 });
 
 export const head: DocumentHead = {
-  title: 'Sheets',
+  title: 'Braincells - Dataset',
   meta: [
     {
-      name: 'Sheets',
-      content: 'Sheets',
+      name: 'description',
+      content: 'Intelligent Spreadsheet Automation',
     },
   ],
 };
